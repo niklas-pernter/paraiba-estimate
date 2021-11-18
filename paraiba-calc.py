@@ -1,3 +1,5 @@
+import argparse
+
 class ParaibaCalculator:
 
     def __init__(self):
@@ -11,29 +13,23 @@ class ParaibaCalculator:
         self.daily_payout = 0
         self.weekly_balance = 0
 
-    def get_user_input(self):
-        self.first_line_balance = int(input("Your Paraiba fistline balance: ") or 245)
-        self.number_of_days_to_run = int(input("Number of days to calculate (default 365): ") or 365)
-        self.number_of_days_to_run = int(input("Number of days to calculate (default 365): ") or 365)
-        self.always_deposit_if_weekly_balance_greater_than_25 = bool(
-            input("Always deposit to firstline if weekly balance greater than 25$? (default false): ") or False)
+    def parse_args(self, args):
+        self.first_line_balance = args.firstline_balance
+        self.number_of_days_to_run = args.days
+        self.percent = args.percent
 
         self.current_balance = self.first_line_balance
-        self.percent = float(input("Daily percentage: ") or 0.003)
 
         self.OK = True
 
     def calculate(self):
-        self.get_user_input()
         if not self.OK: return
 
-        weekly_balance = 0
         for i in range(int(self.number_of_days_to_run / 7) * 4):
             daily_amount = self.current_balance * self.percent + 6
             self.add_daily_payout_to_weekly(daily_amount)
-            self.weekly_balance += self.daily_payout
-            if weekly_balance >= 25:
-                self.deposit_to_firstline(weekly_balance)
+            if self.weekly_balance >= 25:
+                self.deposit_to_firstline(self.weekly_balance)
 
         print("After {0} days you will have {1}$ with a daily payout of {2}$".format(self.number_of_days_to_run,
                                                                                      round(self.current_balance),
@@ -51,4 +47,15 @@ class ParaibaCalculator:
 
 
 if __name__ == "__main__":
-    ParaibaCalculator().calculate()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-b", "--firstline-balance", type=float, default=300)
+    parser.add_argument("-r", "--always-reinvest", type=bool, default=True,
+                        help="always reinvest after one week (if possible)")
+    parser.add_argument("-p", "--percent", type=float, default=0.003)
+    parser.add_argument("-d", "--days", type=int, default=365)
+
+    args = parser.parse_args()
+
+    calc = ParaibaCalculator()
+    calc.parse_args(parser.parse_args())
+    calc.calculate()
