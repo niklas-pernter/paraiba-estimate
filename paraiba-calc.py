@@ -1,5 +1,6 @@
 import argparse
 
+
 class ParaibaCalculator:
 
     def __init__(self):
@@ -17,7 +18,6 @@ class ParaibaCalculator:
         self.first_line_balance = args.firstline_balance
         self.number_of_days_to_run = args.days
         self.percent = args.percent
-
         self.current_balance = self.first_line_balance
 
         self.OK = True
@@ -28,12 +28,17 @@ class ParaibaCalculator:
         for i in range(int(self.number_of_days_to_run / 7) * 4):
             daily_amount = self.current_balance * self.percent + 6
             self.add_daily_payout_to_weekly(daily_amount)
-            if self.weekly_balance >= 25:
+            if self.weekly_balance >= 25 or (
+                    self.always_deposit_if_weekly_balance_greater_than_25 and self.daily_payout >= 25):
                 self.deposit_to_firstline(self.weekly_balance)
 
-        print("After {0} days you will have {1}$ with a daily payout of {2}$".format(self.number_of_days_to_run,
-                                                                                     round(self.current_balance),
-                                                                                     round(self.daily_payout)))
+    def print_summary(self):
+        print("---------------------")
+        print("After {0} days: {1}$ \nDaily payout: {2}$ \nWeekly payout: {3}".format(self.number_of_days_to_run,
+                                                                                      round(self.current_balance),
+
+                                                                                      round(self.daily_payout),
+                                                                                      round(self.daily_payout * 4)))
 
     def add_daily_payout_to_weekly(self, daily_amount):
         self.daily_payout = daily_amount
@@ -59,3 +64,4 @@ if __name__ == "__main__":
     calc = ParaibaCalculator()
     calc.parse_args(parser.parse_args())
     calc.calculate()
+    calc.print_summary()
