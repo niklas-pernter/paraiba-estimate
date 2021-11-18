@@ -5,20 +5,22 @@ class ParaibaCalculator:
 
     def __init__(self):
         self.number_of_days_to_run = 0
-        self.first_line_balance = 0.0
-        self.always_reinvest = True
+        self.total_investment = 0.0
+        self.always_reinvest_on_sundays = True
         self.percent = 0.003
         self.current_balance = 0.0
         self.OK = False
-        self.always_deposit_if_weekly_balance_greater_than_25 = False
         self.daily_payout = 0
         self.weekly_balance = 0
+        self.always_reinvest_if_possible = False
 
     def parse_args(self, args):
-        self.first_line_balance = args.firstline_balance
+        self.total_investment = args.total_investment
         self.number_of_days_to_run = args.days
         self.percent = args.percent
-        self.current_balance = self.first_line_balance
+        self.current_balance = self.total_investment
+        self.always_reinvest_on_sundays = args.always_reinvest_sunday
+        self.always_reinvest_if_possible = args.always_reinvest
 
         self.OK = True
 
@@ -28,9 +30,14 @@ class ParaibaCalculator:
         for i in range(int(self.number_of_days_to_run / 7) * 4):
             daily_amount = self.current_balance * self.percent + 6
             self.add_daily_payout_to_weekly(daily_amount)
-            if self.weekly_balance >= 25 or (
-                    self.always_deposit_if_weekly_balance_greater_than_25 and self.daily_payout >= 25):
-                self.deposit_to_firstline(self.weekly_balance)
+            if self.always_reinvest_if_possible:
+                if self.weekly_balance >= 25:
+                    self.deposit_to_firstline(daily_amount)
+            else:
+                if i % 4 == 0:
+                    if self.weekly_balance >= 25:
+                        self.deposit_to_firstline(self.weekly_balance)
+
 
     def print_summary(self):
         print("---------------------")
@@ -53,9 +60,11 @@ class ParaibaCalculator:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-b", "--firstline-balance", type=float, default=300, help="Default 300$")
-    parser.add_argument("-r", "--always-reinvest", type=bool, default=True,
-                        help="always reinvest after one week (if possible) (default True)")
+    parser.add_argument("-i", "--total-investment", type=float, default=2000, help="Default 2000$")
+    parser.add_argument("-rs", "--always-reinvest-sunday", type=bool, default=True,
+                        help="always reinvest on sundays (if possible) (default True)")
+    parser.add_argument("-r", "--always-reinvest", type=bool, default=False,
+                        help="always reinvest (if possible) (default False)")
     parser.add_argument("-p", "--percent", type=float, default=0.003, help="Default 0.3%")
     parser.add_argument("-d", "--days", type=int, default=365, help="Default 365 days")
 
