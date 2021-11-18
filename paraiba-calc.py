@@ -53,11 +53,11 @@ class ParaibaCalculator:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-b", "--firstline-balance", type=float, default=300)
+    parser.add_argument("-b", "--firstline-balance", type=float, default=300, help="Default 300$")
     parser.add_argument("-r", "--always-reinvest", type=bool, default=True,
-                        help="always reinvest after one week (if possible)")
-    parser.add_argument("-p", "--percent", type=float, default=0.003)
-    parser.add_argument("-d", "--days", type=int, default=365)
+                        help="always reinvest after one week (if possible) (default True)")
+    parser.add_argument("-p", "--percent", type=float, default=0.003, help="Default 0.3%")
+    parser.add_argument("-d", "--days", type=int, default=365, help="Default 365 days")
 
     args = parser.parse_args()
 
