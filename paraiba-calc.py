@@ -38,7 +38,6 @@ class ParaibaCalculator:
                     if self.weekly_balance >= 25:
                         self.deposit_to_firstline(self.weekly_balance)
 
-
     def print_summary(self):
         print("---------------------")
         print("After {0} days: {1}$ \nDaily payout: {2}$ \nWeekly payout: {3}".format(self.number_of_days_to_run,
@@ -53,14 +52,14 @@ class ParaibaCalculator:
         self.weekly_balance += daily_amount
 
     def deposit_to_firstline(self, weekly_amount):
-        print("Deposit to firstline: " + str(weekly_amount))
+        print("Deposit to accounts: " + str(weekly_amount))
         self.current_balance += weekly_amount
         self.weekly_balance = 0
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--total-investment", type=float, default=2000, help="Default 2000$")
+    parser.add_argument("-i", "--total-investment", type=float, default=2100, help="Default 2000$")
     parser.add_argument("-rs", "--always-reinvest-sunday", type=bool, default=True,
                         help="always reinvest on sundays (if possible) (default True)")
     parser.add_argument("-r", "--always-reinvest", type=bool, default=False,
