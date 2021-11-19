@@ -1,69 +1,132 @@
 import argparse
 
 
+
+class Account():
+    def __init__(self, value) -> None:
+        self.value = value
+        self.daily_balance = 0.0
+        self.waiting_to_deposit = 0.0
+
+
+class SubAccount(Account):
+    def __init__(self, value, id) -> None:
+        super().__init__(value)
+        self.id = id
+
+
+class FirstLine(Account):
+    def __init__(self, value) -> None:
+        super().__init__(value)
+
+
 class ParaibaCalculator:
 
     def __init__(self):
         self.number_of_days_to_run = 0
-        self.total_investment = 0.0
         self.always_reinvest_on_sundays = True
         self.percent = 0.003
-        self.current_balance = 0.0
-        self.OK = False
-        self.daily_payout = 0
-        self.weekly_balance = 0
         self.always_reinvest_if_possible = False
 
+        self.subaccounts = []
+        self.firstline = None
+
     def parse_args(self, args):
-        self.total_investment = args.total_investment
         self.number_of_days_to_run = args.days
         self.percent = args.percent
-        self.current_balance = self.total_investment
         self.always_reinvest_on_sundays = args.always_reinvest_sunday
         self.always_reinvest_if_possible = args.always_reinvest
+        self.number_of_subaccounts = args.subaccounts
+        self.firstline = FirstLine(args.firstline_balance) 
+        for i in range(1, args.subaccounts+1):
+            balance = float(input(("Value of Account #{0}: ".format(i))) or 100.0)
+            self.subaccounts.append(SubAccount(balance, i))
 
-        self.OK = True
 
     def calculate(self):
-        if not self.OK: return
+        for i in range(1, (int(self.number_of_days_to_run / 7) * 4)+1):
+            self.add_interest_to_firstline()
+            self.add_interest_to_subaccounts()
+            if self.firstline.waiting_to_deposit >= 25:
+                if self.always_reinvest_if_possible: 
+                    self.deposit_to_firstline(self.firstline.waiting_to_deposit, i)
+                elif i % 4 == 0: 
+                    self.deposit_to_firstline(self.firstline.waiting_to_deposit, i)
+            for index, sub_account in enumerate(self.subaccounts, start=1):
+                if sub_account.waiting_to_deposit >= 25:
+                    if self.always_reinvest_if_possible: 
+                        self.deposit_to_subaccount(sub_account.waiting_to_deposit, index)
+                    elif i % 4 == 0: 
+                        self.deposit_to_subaccount(sub_account.waiting_to_deposit, index, index)
 
-        for i in range(int(self.number_of_days_to_run / 7) * 4):
-            daily_amount = self.current_balance * self.percent + 6
-            self.add_daily_payout_to_weekly(daily_amount)
-            if self.always_reinvest_if_possible:
-                if self.weekly_balance >= 25:
-                    self.deposit_to_firstline(daily_amount)
-            else:
-                if i % 4 == 0:
-                    if self.weekly_balance >= 25:
-                        self.deposit_to_firstline(self.weekly_balance)
 
-    def print_summary(self):
-        print("---------------------")
+    def add_interest_to_firstline(self):
+        val = self.firstline.value * self.percent + 6
+        self.firstline.waiting_to_deposit += val
+        self.firstline.daily_balance = val
+
+
+    def add_interest_to_subaccounts(self):
+        for account in self.subaccounts:
+            interest = account.value * self.percent
+            account.waiting_to_deposit += interest
+            account.daily_balance = interest
+
+
+    def print_summary_firstline(self):
+        print("-----Firstline-----")
         print("After {0} days: {1}$ \nDaily payout: {2}$ \nWeekly payout: {3}".format(self.number_of_days_to_run,
-                                                                                      round(self.current_balance),
+                                                                                      round(self.firstline.value),
+                                                                                      round(self.firstline.daily_balance),
+                                                                                      round(self.firstline.daily_balance*4)))
 
-                                                                                      round(self.daily_payout),
-                                                                                      round(self.daily_payout * 4)))
 
-    def add_daily_payout_to_weekly(self, daily_amount):
-        self.daily_payout = daily_amount
-        print("Daily Payout: " + str(self.daily_payout))
-        self.weekly_balance += daily_amount
+    def print_summary_subaccounts(self):
+        print("-----Subaccounts-----")
+        for account in self.subaccounts:
+            print("After {0} days: {1}$ \nDaily payout: {2}$ \nWeekly payout: {3}".format(self.number_of_days_to_run,
+                                                                                        round(account.value),
+                                                                                        round(account.daily_balance),
+                                                                                        round(account.daily_balance*4)))
 
-    def deposit_to_firstline(self, weekly_amount):
-        print("Deposit to accounts: " + str(weekly_amount))
-        self.current_balance += weekly_amount
-        self.weekly_balance = 0
+
+    def print_total_summary(self):
+        total_value = 0
+        total_value += self.firstline.value
+        for account in self.subaccounts:
+            total_value += account.value
+        print("-----Total Balance-----")
+        print(str(total_value))
+
+
+    def get_week_day_from_number(self, n):
+        if(n % 4 == 0): return "Sunday" 
+        elif(n % 4 == 1): return "Saturday"
+        elif(n % 4 == 2): return "Friday"
+        elif(n % 4 == 3): return "Thursday" 
+
+
+    def deposit_to_firstline(self, weekly_amount, day):
+        print("Deposit to firstline on {0}: {1}".format(self.get_week_day_from_number(day), str(weekly_amount)))
+        self.firstline.value += self.firstline.waiting_to_deposit
+        self.firstline.waiting_to_deposit = 0
+
+
+    def deposit_to_subaccount(self, weekly_amount, acc_number, day):
+        print("Deposit to Account #{0} on {1}: {2}".format(acc_number, self.get_week_day_from_number(day), str(weekly_amount)))
+        account = list(filter(lambda e: e.id == acc_number, self.subaccounts))[0]
+        account.value += account.waiting_to_deposit
+        account.waiting_to_deposit = 0
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--total-investment", type=float, default=2100, help="Default 2000$")
     parser.add_argument("-rs", "--always-reinvest-sunday", type=bool, default=True,
                         help="always reinvest on sundays (if possible) (default True)")
     parser.add_argument("-r", "--always-reinvest", type=bool, default=False,
                         help="always reinvest (if possible) (default False)")
+    parser.add_argument("-sn", "--subaccounts", type=int, default=20)
+    parser.add_argument("-fb", "--firstline-balance", type=float, default=300)
     parser.add_argument("-p", "--percent", type=float, default=0.003, help="Default 0.3%")
     parser.add_argument("-d", "--days", type=int, default=365, help="Default 365 days")
 
@@ -72,4 +135,6 @@ if __name__ == "__main__":
     calc = ParaibaCalculator()
     calc.parse_args(parser.parse_args())
     calc.calculate()
-    calc.print_summary()
+    calc.print_summary_firstline()
+    calc.print_summary_subaccounts()
+    calc.print_total_summary()
