@@ -39,7 +39,7 @@ class ParaibaCalculator:
         self.number_of_subaccounts = args.subaccounts
         self.firstline = FirstLine(args.firstline_balance) 
         for i in range(1, args.subaccounts+1):
-            balance = float(input(("Value of Account #{0}: ".format(i))) or 100.0)
+            balance = float(input(("Value of Sub-Account #{0}: ".format(i))) or 100.0)
             self.subaccounts.append(SubAccount(balance, i))
 
 
