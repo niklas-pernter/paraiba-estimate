@@ -76,20 +76,20 @@ class ParaibaCalculator:
 
 
     def print_summary_firstline(self):
-        print("-----Firstline-----")
-        print("After {0} days: {1}$ \nDaily payout: {2}$ \nWeekly payout: {3}".format(self.number_of_days_to_run,
-                                                                                      round(self.firstline.value),
-                                                                                      round(self.firstline.daily_balance),
-                                                                                      round(self.firstline.daily_balance*4)))
+        print("\n-----Firstline-----")
+        print("After {0} days: {1}$ \nDaily payout: {2}$ \nWeekly payout: {3}$".format(self.number_of_days_to_run,
+                                                                                      round(self.firstline.value, 2),
+                                                                                      round(self.firstline.daily_balance, 2),
+                                                                                      round(self.firstline.daily_balance*4, 2)))
 
 
     def print_summary_subaccounts(self):
-        print("-----Subaccounts-----")
+        print("\n-----Subaccounts-----")
         for account in self.subaccounts:
-            print("After {0} days: {1}$ \nDaily payout: {2}$ \nWeekly payout: {3}".format(self.number_of_days_to_run,
-                                                                                        round(account.value),
-                                                                                        round(account.daily_balance),
-                                                                                        round(account.daily_balance*4)))
+            print("After {0} days: {1}$ \nDaily payout: {2}$ \nWeekly payout: {3}$".format(self.number_of_days_to_run,
+                                                                                        round(account.value, 2),
+                                                                                        round(account.daily_balance,2),
+                                                                                        round(account.daily_balance*4, 2)))
 
 
     def print_total_summary(self):
@@ -97,9 +97,9 @@ class ParaibaCalculator:
         total_value += self.firstline.value
         for account in self.subaccounts:
             total_value += account.value
-        print("-----Total Balance-----")
-        print("Resulting Balance: " + str(round(total_value)) + "$")
-        print("Initial investment: " + str(round(self.initial_investment)) + "$") 
+        print("\n-----Total Balance-----")
+        print("Resulting Balance: " + str(round(total_value, 2)) + "$")
+        print("Initial investment: " + str(round(self.initial_investment, 2)) + "$") 
 
 
     def get_week_day_from_number(self, n):
@@ -110,13 +110,13 @@ class ParaibaCalculator:
 
 
     def deposit_to_firstline(self, weekly_amount, day):
-        print("Deposit to firstline on {0} (day {2}): {1}".format(self.get_week_day_from_number(day), str(day), str(weekly_amount)))
+        print("Deposit to firstline on {0} (day {1}): {2}$".format(self.get_week_day_from_number(day), str(day), str(round(weekly_amount,2))))
         self.firstline.value += self.firstline.waiting_to_deposit
         self.firstline.waiting_to_deposit = 0
 
 
     def deposit_to_subaccount(self, weekly_amount, acc_number, day):
-        print("Deposit to Account #{0} on {1} (day {2}): {3}".format(acc_number, self.get_week_day_from_number(day), str(day), str(weekly_amount)))
+        print("Deposit to Account #{0} on {1} (day {2}): {3}$".format(acc_number, self.get_week_day_from_number(day), str(day), str(round(weekly_amount, 2))))
         account = list(filter(lambda e: e.id == acc_number, self.subaccounts))[0]
         self.firstline.value += account.waiting_to_deposit
         account.waiting_to_deposit = 0
