@@ -115,7 +115,7 @@ class ParaibaCalculator:
     def deposit_to_subaccount(self, weekly_amount, acc_number, day):
         print("Deposit to Account #{0} on {1}: {2}".format(acc_number, self.get_week_day_from_number(day), str(weekly_amount)))
         account = list(filter(lambda e: e.id == acc_number, self.subaccounts))[0]
-        account.value += account.waiting_to_deposit
+        self.firstline.value += account.waiting_to_deposit
         account.waiting_to_deposit = 0
 
 
