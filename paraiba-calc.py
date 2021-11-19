@@ -28,6 +28,8 @@ class ParaibaCalculator:
         self.percent = 0.003
         self.always_reinvest_if_possible = False
 
+        self.initial_investment = 0.0
+
         self.subaccounts = []
         self.firstline = None
 
@@ -39,9 +41,11 @@ class ParaibaCalculator:
         self.number_of_subaccounts = args.subaccounts
         self.firstline = FirstLine(args.firstline_balance) 
         for i in range(1, args.subaccounts+1):
-            balance = float(input(("Value of Sub-Account #{0}: ".format(i))) or 100.0)
+            balance = float(input(("Value of Account #{0}: ".format(i))) or 100.0)
             self.subaccounts.append(SubAccount(balance, i))
-
+        
+        self.initial_investment += args.firstline_balance
+        self.initial_investment += sum(a.value for a in self.subaccounts)
 
     def calculate(self):
         for i in range(1, (int(self.number_of_days_to_run / 7) * 4)+1):
@@ -54,10 +58,8 @@ class ParaibaCalculator:
                     self.deposit_to_firstline(self.firstline.waiting_to_deposit, i)
             for index, sub_account in enumerate(self.subaccounts, start=1):
                 if sub_account.waiting_to_deposit >= 25:
-                    if self.always_reinvest_if_possible: 
-                        self.deposit_to_subaccount(sub_account.waiting_to_deposit, index)
-                    elif i % 4 == 0: 
-                        self.deposit_to_subaccount(sub_account.waiting_to_deposit, index, index)
+                    if i % 4 == 0: 
+                        self.deposit_to_subaccount(sub_account.waiting_to_deposit, index, i)
 
 
     def add_interest_to_firstline(self):
@@ -96,7 +98,8 @@ class ParaibaCalculator:
         for account in self.subaccounts:
             total_value += account.value
         print("-----Total Balance-----")
-        print(str(total_value))
+        print("Resulting Balance: " + str(round(total_value)) + "$")
+        print("Initial investment: " + str(round(self.initial_investment)) + "$") 
 
 
     def get_week_day_from_number(self, n):
@@ -120,20 +123,20 @@ class ParaibaCalculator:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument("-rs", "--always-reinvest-sunday", type=bool, default=True,
                         help="always reinvest on sundays (if possible) (default True)")
     parser.add_argument("-r", "--always-reinvest", type=bool, default=False,
                         help="always reinvest (if possible) (default False)")
-    parser.add_argument("-sn", "--subaccounts", type=int, default=20)
-    parser.add_argument("-fb", "--firstline-balance", type=float, default=300)
+    parser.add_argument("-sn", "--subaccounts", type=int, default=20, help="Default 20")
+    parser.add_argument("-fb", "--firstline-balance", type=float, default=1000, help="Default is 1000")
     parser.add_argument("-p", "--percent", type=float, default=0.003, help="Default 0.3")
-    parser.add_argument("-d", "--days", type=int, default=365, help="Default 365 days")
+    parser.add_argument("-d", "--days", type=int, default=730, help="Default 365 days")
 
     args = parser.parse_args()
 
     calc = ParaibaCalculator()
-    calc.parse_args(parser.parse_args())
+    calc.parse_args(args)
     calc.calculate()
     calc.print_summary_firstline()
     calc.print_summary_subaccounts()
