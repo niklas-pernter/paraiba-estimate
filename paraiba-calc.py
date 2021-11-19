@@ -129,9 +129,9 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--always-reinvest", type=bool, default=False,
                         help="always reinvest (if possible) (default False)")
     parser.add_argument("-sn", "--subaccounts", type=int, default=20, help="Default 20")
-    parser.add_argument("-fb", "--firstline-balance", type=float, default=1000, help="Default is 1000")
+    parser.add_argument("-fb", "--firstline-balance", type=float, default=300, help="Default is 1000")
     parser.add_argument("-p", "--percent", type=float, default=0.003, help="Default 0.3")
-    parser.add_argument("-d", "--days", type=int, default=730, help="Default 365 days")
+    parser.add_argument("-d", "--days", type=int, default=365, help="Default 365 days")
 
     args = parser.parse_args()
 
