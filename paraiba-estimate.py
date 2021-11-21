@@ -1,5 +1,5 @@
 import argparse
-
+import datetime
 
 class Account:
     def __init__(self, value) -> None:
@@ -33,13 +33,14 @@ class Color:
 
 
 class ParaibaEstimate:
-    def __init__(self, num_of_subaccounts, firstline_balance, percent, days_to_run) -> None:
+    def __init__(self, num_of_subaccounts, firstline_balance, percent, days_to_run, output) -> None:
         self.number_of_subaccounts = num_of_subaccounts
         self.firstline = FirstLine(firstline_balance)
         self.percent = percent
         self.initial_investment = 0.0
         self.days_to_run = days_to_run
         self.sub_accounts = []
+        self.output = output
         for i in range(1, num_of_subaccounts+1):
             value = float(input("Value of Sub-Account #{0}: ".format(i)) or 100)
             self.sub_accounts.append(SubAccount(value, i))
@@ -88,39 +89,62 @@ class ParaibaEstimate:
     def deposit_to_firstline(self):
         self.firstline.value += self.firstline.waiting_to_deposit
         self.firstline.waiting_to_deposit = 0.0
-        self.firstline.daily_balance = 0.0
     
 
     def deposit_from_sub_account_to_firstline(self, account):
         self.firstline.value += account.waiting_to_deposit
         account.waiting_to_deposit = 0.0
-        account.daily_balance = 0.0
-
 
     def print_summary(self):
         total_investment = self.firstline.value + sum(a.value for a in self.sub_accounts)
         total_waiting_to_deposit = self.firstline.waiting_to_deposit + sum(a.waiting_to_deposit for a in self.sub_accounts)
-        print("\nSummary")
 
-        print("\tFirstline")
-        print("\t\t↳ Value: {}$".format(round(self.firstline.value, 2)))
-        print("\t\t↳ Waiting to deposit: {}$".format(round(self.firstline.waiting_to_deposit, 2)))
 
-        print("\tTotal Investment after {} days".format(self.days_to_run))
-        print("\t\t↳ Value: {}$".format(round(total_investment, 2)))
-        print("\t\t↳ Initial investment: {}$".format(round(self.initial_investment, 2)))
-        print("\t\t↳ Total waiting to deposit: {}$".format(round(total_waiting_to_deposit, 2)))
+        output = """Summary after {0} days
+
+            Firstline
+                - Value: {1}$
+                - Waiting to deposit: {2}$
+                
+                - Daily interest: {3}$
+                - Weekly interest: {4}$
+                - Monthly interest: {5}$
+
+            Total Investment
+                - Value: {6}$
+                - Initial investment: {7}$
+                - Total waiting to deposit: {8}$""".format(
+            str(self.days_to_run),
+
+            str(round(self.firstline.value, 2)),
+            str(round(self.firstline.waiting_to_deposit, 2)),
+            str(round(self.firstline.daily_balance, 2)),
+            str(round(self.firstline.daily_balance*4, 2)),
+            str(round(self.firstline.daily_balance*16, 2)),
+
+            str(round(total_investment, 2)),
+            str(round(self.initial_investment, 2)),
+            str(round(total_waiting_to_deposit, 2))
+        )
+    
+        print("\n" + output)
+        if(output):
+            f = open("paraiba_estimates_{}.txt".format(datetime.datetime.now().strftime("%Y%m%d%H%M%S")), "x")
+            f.write(output)
+            f.close
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument("-a", "--subaccounts", type=int, default=20, help="Default 20")
-    parser.add_argument("-f", "--firstline-balance", type=float, default=1000)
+    parser.add_argument("-f", "--firstline-balance", type=float, default=330)
     parser.add_argument("-p", "--percent", type=float, default=0.003, help="Default 0.3")
     parser.add_argument("-d", "--days", type=int, default=365, help="Default 365 days")
+    parser.add_argument("-o", "--output", type=bool, default=False, help="Output to file")
+
 
     args = parser.parse_args()
 
-    calc = ParaibaEstimate(args.subaccounts, args.firstline_balance, args.percent, args.days)
+    calc = ParaibaEstimate(args.subaccounts, args.firstline_balance, args.percent, args.days, args.output)
     calc.estimate()
     calc.print_summary()
