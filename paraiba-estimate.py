@@ -58,7 +58,6 @@ class ParaibaEstimate:
                 for account in self.sub_accounts:
                     if account.daily_balance >= 25: self.deposit_from_sub_account_to_firstline(account)
                     elif account.waiting_to_deposit >= 25: self.deposit_from_sub_account_to_firstline(account)
-        bob = 0
 
         
     def add_interest_to_firstline_account(self):
@@ -97,20 +96,20 @@ class ParaibaEstimate:
         account.waiting_to_deposit = 0.0
         account.daily_balance = 0.0
 
+
     def print_summary(self):
         total_investment = self.firstline.value + sum(a.value for a in self.sub_accounts)
         total_waiting_to_deposit = self.firstline.waiting_to_deposit + sum(a.waiting_to_deposit for a in self.sub_accounts)
-        print(Color.GREEN + (Color.UNDERLINE + "\nSummary" + Color.END) + Color.END)
+        print("\nSummary")
 
-        print(Color.BOLD + "\tFirstline" + Color.END)
+        print("\tFirstline")
         print("\t\t↳ Value: {}$".format(round(self.firstline.value, 2)))
         print("\t\t↳ Waiting to deposit: {}$".format(round(self.firstline.waiting_to_deposit, 2)))
 
-        print(Color.BOLD + "\tTotal Investment" + Color.END)
+        print("\tTotal Investment")
         print("\t\t↳ Value: {}$".format(round(total_investment, 2)))
         print("\t\t↳ Initial investment: {}$".format(round(self.initial_investment, 2)))
         print("\t\t↳ Total waiting to deposit: {}$".format(round(total_waiting_to_deposit, 2)))
-
 
 
 if __name__ == "__main__":
@@ -125,3 +124,4 @@ if __name__ == "__main__":
     calc = ParaibaEstimate(args.subaccounts, args.firstline_balance, args.percent, args.days)
     calc.estimate()
     calc.print_summary()
+    
