@@ -42,7 +42,7 @@ class ParaibaEstimate:
         self.sub_accounts = []
         self.output = output
         for i in range(1, num_of_subaccounts+1):
-            value = float(input("Value of Sub-Account #{0}: ".format(i)) or 100)
+            value = float(input("Balue of Sub-Account #{0}: ".format(i)) or 100)
             self.sub_accounts.append(SubAccount(value, i))
             self.initial_investment += value
         self.initial_investment += firstline_balance
