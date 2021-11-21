@@ -132,6 +132,7 @@ class ParaibaEstimate:
             f = open("paraiba_estimates_{}.txt".format(datetime.datetime.now().strftime("%Y%m%d%H%M%S")), "x")
             f.write(output)
             f.close
+        input("Press enter to exit...")
 
 
 if __name__ == "__main__":
