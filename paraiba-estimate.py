@@ -106,7 +106,7 @@ class ParaibaEstimate:
         print("\t\t↳ Value: {}$".format(round(self.firstline.value, 2)))
         print("\t\t↳ Waiting to deposit: {}$".format(round(self.firstline.waiting_to_deposit, 2)))
 
-        print("\tTotal Investment")
+        print("\tTotal Investment after {} days".format(self.days_to_run))
         print("\t\t↳ Value: {}$".format(round(total_investment, 2)))
         print("\t\t↳ Initial investment: {}$".format(round(self.initial_investment, 2)))
         print("\t\t↳ Total waiting to deposit: {}$".format(round(total_waiting_to_deposit, 2)))
@@ -124,4 +124,3 @@ if __name__ == "__main__":
     calc = ParaibaEstimate(args.subaccounts, args.firstline_balance, args.percent, args.days)
     calc.estimate()
     calc.print_summary()
-    
