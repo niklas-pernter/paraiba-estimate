@@ -1,42 +1,86 @@
 import argparse
 import datetime
 
+
 class Account:
-    def __init__(self, initial, value) -> None:
+    def __init__(self, initial, value, percent=0.3) -> None:
         self.initial = initial
         self.value = value
         self.daily_balance = 0.0
         self.waiting_to_deposit = 0.0
+        self.percent = percent
+
+
+    def deposit(self):
+        self.value += self.waiting_to_deposit
+        self.waiting_to_deposit = 0
+
+
+    def deposit_with_amount(self, amount):
+        self.value += amount
+        self.waiting_to_deposit = 0
+
+
+    def get_downline_bonus(self):
+        return 0.001 if self.value > 1000 else 0.0
+
+
+    def get_deposit_bonus(self):
+        return self.value * self.percent
 
 
 class SubAccount(Account):
-    def __init__(self, initial, value, id) -> None:
-        super().__init__(initial, value)
+    def __init__(self, initial, value, id, percent) -> None:
+        super().__init__(initial, value, percent)
         self.id = id
 
 
-class FirstLine(Account):
-    def __init__(self, initial, value) -> None:
-        super().__init__(initial, value)
+    def add_interest(self):
+        self.waiting_to_deposit += self.get_deposit_bonus()
+        self.daily_balance = self.get_deposit_bonus()
 
 
+class PrimaryAccount(Account):
+    def __init__(self, initial, value, sub_accounts, percent) -> None:
+        super().__init__(initial, value, percent)
+        self.sub_accounts = sub_accounts
+
+
+    def get_firstline_bonus(self):
+        return sum(e.value for e in self.sub_accounts) * self.percent
+
+
+    def add_interest(self):
+        interest = self.get_deposit_bonus() + self.get_firstline_bonus() + self.get_downline_bonus()
+        self.waiting_to_deposit += interest
+        self.daily_balance = interest
+
+
+    def add_interest_to_subaccounts(self):
+        for account in self.sub_accounts: account.add_interest()
+
+
+    def deposit_from_subaccount_to_firstline(self, account):
+        self.deposit_with_amount(account.waiting_to_deposit)
+        account.waiting_to_deposit = 0
+
+        
 class ParaibaEstimate:
     def __init__(self, num_of_subaccounts, firstline_balance, percent, days_to_run, output, till_balance) -> None:
-        self.number_of_subaccounts = num_of_subaccounts
-        self.firstline = FirstLine(firstline_balance, firstline_balance)
-        self.percent = percent
         self.initial_investment = 0.0
         self.days_to_run = days_to_run
-        self.sub_accounts = []
         self.output = output
         self.weeks_till_balance_value = till_balance
         self.weeks_till_balance_week = 0
         self.weeks = 0
+
+        sub_accounts = []
         for i in range(1, num_of_subaccounts+1):
             value = float(input("Value of Sub-Account #{0}: ".format(i)) or 100)
-            self.sub_accounts.append(SubAccount(value, value, i))
+            sub_accounts.append(SubAccount(value, value, i, percent))
             self.initial_investment += value
         self.initial_investment += firstline_balance
+        self.primary_account = PrimaryAccount(firstline_balance, firstline_balance, sub_accounts, percent)
 
 
     def estimate(self):
@@ -53,27 +97,27 @@ class ParaibaEstimate:
             for i in range(1, 4+1):
                 self.add_interest_for_day(i)
             week += 1
-            if self.firstline.value > self.weeks_till_balance_value:
+            if self.primary_account.value > self.weeks_till_balance_value:
                 self.weeks = week
                 running = False
 
 
     def add_interest_for_day(self, i):
-        self.add_interest_to_firstline_account()
-        self.add_interest_to_subaccounts()
-        if self.firstline.daily_balance >= 25: self.deposit_to_firstline()
+        self.primary_account.add_interest()
+        self.primary_account.add_interest_to_subaccounts()
+        if self.primary_account.daily_balance >= 25: self.primary_account.deposit()
         elif i % 4 == 0:
-            if self.firstline.waiting_to_deposit >= 25: self.deposit_to_firstline()
-        for account in self.sub_accounts:
-            if account.daily_balance >= 25: self.deposit_from_sub_account_to_firstline(account)
-            elif account.waiting_to_deposit >= 25: self.deposit_from_sub_account_to_firstline(account)
+            if self.primary_account.waiting_to_deposit >= 25: self.primary_account.deposit()
+        for account in self.primary_account.sub_accounts:
+            if account.daily_balance >= 25: self.primary_account.deposit_from_subaccount_to_firstline(account)
+            elif account.waiting_to_deposit >= 25: self.primary_account.deposit_from_subaccount_to_firstline(account)
 
 
     def print_balance_after_week(self, weeks):
         week_text = "week" if weeks == 1 else "weeks"
         month_text = "month" if int(weeks/4) == 1 else "months"
         print(str("{0}$ -> {1}$ after {2} {3} ({4} {5})".format(
-            self.firstline.initial, 
+            self.primary_account.initial, 
             self.weeks_till_balance_value, 
             weeks, 
             week_text, 
@@ -82,44 +126,9 @@ class ParaibaEstimate:
             ))
 
 
-    def add_interest_to_firstline_account(self):
-        daily_interest = self.get_deposit_bonus(self.firstline.value) + self.get_firstline_bonus() + self.get_downline_bonus()
-        self.firstline.daily_balance = daily_interest
-        self.firstline.waiting_to_deposit += daily_interest
-    
-
-    def add_interest_to_subaccounts(self):
-        for account in self.sub_accounts:
-            daily_interest = self.get_deposit_bonus(account.value)
-            account.daily_balance = daily_interest
-            account.waiting_to_deposit += daily_interest
-
-
-    def get_firstline_bonus(self):
-        return sum(e.value for e in self.sub_accounts) * self.percent
-
-
-    def get_deposit_bonus(self, balance):
-        return balance * self.percent
-
-
-    def get_downline_bonus(self):
-        return 0.001 if self.firstline.value > 1000 else 0.0
-
-
-    def deposit_to_firstline(self):
-        self.firstline.value += self.firstline.waiting_to_deposit
-        self.firstline.waiting_to_deposit = 0.0
-    
-
-    def deposit_from_sub_account_to_firstline(self, account):
-        self.firstline.value += account.waiting_to_deposit
-        account.waiting_to_deposit = 0.0
-
-
     def print_summary(self):
-        total_investment = self.firstline.value + sum(a.value for a in self.sub_accounts)
-        total_waiting_to_deposit = self.firstline.waiting_to_deposit + sum(a.waiting_to_deposit for a in self.sub_accounts)
+        total_investment = self.primary_account.value + sum(a.value for a in self.primary_account.sub_accounts)
+        total_waiting_to_deposit = self.primary_account.waiting_to_deposit + sum(a.waiting_to_deposit for a in self.primary_account.sub_accounts)
         months = self.weeks / 7
         years = months / 12
 
@@ -142,11 +151,11 @@ class ParaibaEstimate:
             str(self.weeks),
             str(round(months, 2)),
             str(round(years, 2)),
-            str(f"{round(self.firstline.value, 2):,}"),
-            str(f"{round(self.firstline.waiting_to_deposit, 2):,}"),
-            str(f"{round(self.firstline.daily_balance, 2):,}"),
-            str(f"{round(self.firstline.daily_balance*4, 2):,}"),
-            str(f"{round(self.firstline.daily_balance*16, 2):,}"),
+            str(f"{round(self.primary_account.value, 2):,}"),
+            str(f"{round(self.primary_account.waiting_to_deposit, 2):,}"),
+            str(f"{round(self.primary_account.daily_balance, 2):,}"),
+            str(f"{round(self.primary_account.daily_balance*4, 2):,}"),
+            str(f"{round(self.primary_account.daily_balance*16, 2):,}"),
 
             str(f"{round(total_investment, 2):,}"),
             str(f"{round(self.initial_investment, 2):,}"),
