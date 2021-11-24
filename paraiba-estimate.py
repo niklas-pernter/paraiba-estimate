@@ -1,6 +1,6 @@
 import argparse
 import datetime
-
+import re
 
 class Account:
     def __init__(self, initial, value, percent=0.3) -> None:
@@ -74,11 +74,20 @@ class ParaibaEstimate:
         self.weeks_till_balance_week = 0
         self.weeks = 0
 
+        num_of_subaccounts_regex_search = re.search(r"([0-9]+)=?([0-9]+)?", num_of_subaccounts)
+        num_of_subaccounts = int(num_of_subaccounts_regex_search.group(1))
+        
+        default_value = num_of_subaccounts_regex_search.group(2) 
+        num_of_subaccounts_default_values = default_value if default_value is not None else 100 
+
         sub_accounts = []
         for i in range(1, num_of_subaccounts+1):
-            value = float(input("Value of Sub-Account #{0}: ".format(i)) or 100)
+            value = float(num_of_subaccounts_default_values)
+            if default_value is None:
+                value = float(input("Value of Sub-Account #{0}: ".format(i)) or 100)
             sub_accounts.append(SubAccount(value, value, i, percent))
             self.initial_investment += value
+                
         self.initial_investment += firstline_balance
         self.primary_account = PrimaryAccount(firstline_balance, firstline_balance, sub_accounts, percent)
 
@@ -174,12 +183,12 @@ class ParaibaEstimate:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process some integers.')
-    parser.add_argument("-a", "--subaccounts", type=int, default=20, help="Default 20")
-    parser.add_argument("-f", "--firstline-balance", type=float, default=330)
+    parser.add_argument("-a", "--subaccounts", type=str, default="20", help="add = with number to set default for all account example: 20=100")
+    parser.add_argument("-f", "--firstline-balance", type=float, default=1000, help="Default is 1000")
     parser.add_argument("-p", "--percent", type=float, default=0.003, help="Default 0.3")
     parser.add_argument("-d", "--days", type=int, default=365, help="Default 365 days")
     parser.add_argument("-o", "--output", type=bool, default=False, help="Output to file")
-    parser.add_argument("-b", "--till-balance", type=float, help="Weeks until balance is parameter")
+    parser.add_argument("-b", "--till-balance", type=float, help="Weeks until balance equals to input")
 
     args = parser.parse_args()
 
