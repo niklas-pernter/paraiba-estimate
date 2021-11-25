@@ -138,7 +138,7 @@ class ParaibaEstimate:
     def print_summary(self):
         total_investment = self.primary_account.value + sum(a.value for a in self.primary_account.sub_accounts)
         total_waiting_to_deposit = self.primary_account.waiting_to_deposit + sum(a.waiting_to_deposit for a in self.primary_account.sub_accounts)
-        months = self.weeks / 7
+        months = self.weeks / 4
         years = months / 12
 
         output = """Estimated summary after {0} weeks or {1} months or {2} years
