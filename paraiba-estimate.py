@@ -2,12 +2,13 @@ import argparse
 import re
 
 class Account:
-    def __init__(self, initial, value, sub_accounts=[]) -> None:
+    def __init__(self, initial, value, sub_accounts=[], pool_bonus=0.0) -> None:
         self.initial = initial
         self.value = value
         self.daily_balance = 0.0
         self.waiting_to_deposit = 0.0
         self.sub_accounts = sub_accounts
+        self.pool_bonus = pool_bonus
 
     def deposit(self):
         self.value += self.waiting_to_deposit
@@ -56,20 +57,20 @@ class SubAccount(Account):
         self.id = id
 
     def add_interest(self):
-        interest = self.value * self.get_deposit_bonus()
+        interest = self.value * self.get_deposit_bonus() + self.pool_bonus
         self.waiting_to_deposit += interest
         self.daily_balance = interest
 
 
 class PrimaryAccount(Account):
-    def __init__(self, initial, value, sub_accounts) -> None:
-        super().__init__(initial, value, sub_accounts)
+    def __init__(self, initial, value, sub_accounts, pool_bonus) -> None:
+        super().__init__(initial, value, sub_accounts, pool_bonus)
 
     def add_interest(self):
         deposit_bonus = self.value * self.get_deposit_bonus()
         fistline_bonus = self.get_firstline_bonus()
         downline_bonus = self.value * self.get_downline_bonus()
-        interest = deposit_bonus + fistline_bonus + downline_bonus
+        interest = deposit_bonus + fistline_bonus + downline_bonus + self.pool_bonus
         self.waiting_to_deposit += interest
         self.daily_balance = interest
 
@@ -79,7 +80,7 @@ class PrimaryAccount(Account):
 
         
 class ParaibaEstimate:
-    def __init__(self, num_of_subaccounts, firstline_balance, days_to_run, till_balance) -> None:
+    def __init__(self, num_of_subaccounts, firstline_balance, days_to_run, till_balance, pool_bonus) -> None:
         self.initial_investment = 0.0
         self.days_to_run = days_to_run
         self.weeks_till_balance_value = till_balance
@@ -101,7 +102,7 @@ class ParaibaEstimate:
             self.initial_investment += value
                 
         self.initial_investment += firstline_balance
-        self.primary_account = PrimaryAccount(firstline_balance, firstline_balance, sub_accounts)
+        self.primary_account = PrimaryAccount(firstline_balance, firstline_balance, sub_accounts, pool_bonus)
 
 
     def estimate(self):
@@ -193,10 +194,11 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--firstline-balance", type=float, default=1077, help="Default is 1000")
     parser.add_argument("-d", "--days", type=int, default=365, help="Default 365 days")
     parser.add_argument("-b", "--till-balance", type=float, help="Weeks until balance equals to input")
+    parser.add_argument("-p", "--pool-bonus", type=float, help="Pool bonus (read from Dashboard)")
 
     args = parser.parse_args()
 
-    calc = ParaibaEstimate(args.subaccounts, args.firstline_balance, args.days, args.till_balance)
+    calc = ParaibaEstimate(args.subaccounts, args.firstline_balance, args.days, args.till_balance, args.pool_bonus)
 
     if args.till_balance is not None:
         if args.till_balance > 0.0: calc.estimate_weeks_till_value()
